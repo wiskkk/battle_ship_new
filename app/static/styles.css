@@ -1,0 +1,230 @@
+/* app/static/styles.css */
+
+/* Общие стили */
+body {
+    font-family: "Arial", sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#game-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #007bff;
+    margin-bottom: 20px;
+}
+
+/* Стили для игровых полей */
+#boards {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(10, 40px);
+    grid-gap: 2px;
+    margin: 10px auto;
+    border: 2px solid #007bff;
+    padding: 5px;
+    background-color: #e9ecef;
+}
+
+.board div {
+    width: 40px;
+    height: 40px;
+    background-color: #f8f9fa; /* Цвет клетки */
+    border: 1px solid #ccc; /* Граница клетки */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.board div:hover {
+    background-color: #d1e7dd; /* Цвет при наведении курсора */
+}
+
+.board div.hit {
+    background-color: red; /* Клетка с попаданием */
+}
+
+.board div.miss {
+    background-color: gray; /* Клетка с промахом */
+}
+
+.board div.ship {
+    background-color: darkblue; /* Клетка с кораблем */
+}
+
+/* Стили для панели управления */
+#controls {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#controls button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#controls button:hover {
+    background-color: #0056b3;
+}
+
+#controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+#timer {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+/* Стили для панели состояния */
+#status {
+    font-size: 1.2rem;
+    color: #28a745;
+    margin-bottom: 20px;
+}
+
+#status.error {
+    color: #dc3545;
+}
+
+.board div:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+.board-container {
+    display: inline-block;
+    margin-right: 20px; /* Отступ между полями */
+}
+
+.cell {
+    width: 40px;
+    height: 40px;
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.cell:hover {
+    background-color: #d1e7dd;
+}
+
+/* Стили для страницы авторизации */
+#auth-container {
+    width: 300px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.auth-form {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-form.active {
+    display: flex;
+}
+
+.auth-form input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.auth-form button {
+    padding: 10px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.auth-form button:hover {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-top: 10px;
+}
+
+#switch-form a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#switch-form a:hover {
+    text-decoration: underline;
+}
+
+#ship-selection {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#ship-selection button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#ship-selection button:hover {
+    background-color: #0056b3;
+}
+
+#ship-selection label {
+    margin-right: 10px;
+}

@@ -1,11 +1,13 @@
+import sys
 from logging.config import fileConfig
+from pathlib import Path
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 from app.db.session import Base
-from app.models import User, Game
+from app.models import Game, User
 
-import sys
-from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 config = context.config

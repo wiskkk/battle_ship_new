@@ -1,0 +1,111 @@
+<!-- app/static/auth.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация | Морской бой</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div id="auth-container">
+        <h1>Морской бой</h1>
+
+        <!-- Форма входа -->
+        <div id="login-form" class="auth-form active">
+            <h2>Вход</h2>
+            <input type="text" id="login-username" placeholder="Логин" required>
+            <input type="password" id="login-password" placeholder="Пароль" required>
+            <button id="login-button">Войти</button>
+            <p id="login-error" class="error-message"></p>
+        </div>
+
+        <!-- Форма регистрации -->
+        <div id="register-form" class="auth-form">
+            <h2>Регистрация</h2>
+            <input type="text" id="register-username" placeholder="Логин" required>
+            <input type="password" id="register-password" placeholder="Пароль" required>
+            <button id="register-button">Зарегистрироваться</button>
+            <p id="register-error" class="error-message"></p>
+        </div>
+
+        <!-- Ссылка для переключения между формами -->
+        <p id="switch-form">
+            Нет аккаунта? <a href="#" id="switch-to-register">Зарегистрироваться</a>
+        </p>
+        <p id="switch-form" style="display: none;">
+            Есть аккаунт? <a href="#" id="switch-to-login">Войти</a>
+        </p>
+    </div>
+
+    <script>
+        // Переключение между формами
+        document.getElementById("switch-to-register").addEventListener("click", (e) => {
+            e.preventDefault();
+            document.getElementById("login-form").classList.remove("active");
+            document.getElementById("register-form").classList.add("active");
+            document.getElementById("switch-form").querySelectorAll("p")[0].style.display = "none";
+            document.getElementById("switch-form").querySelectorAll("p")[1].style.display = "block";
+        });
+
+        document.getElementById("switch-to-login").addEventListener("click", (e) => {
+            e.preventDefault();
+            document.getElementById("register-form").classList.remove("active");
+            document.getElementById("login-form").classList.add("active");
+            document.getElementById("switch-form").querySelectorAll("p")[1].style.display = "none";
+            document.getElementById("switch-form").querySelectorAll("p")[0].style.display = "block";
+        });
+
+        // Обработка формы входа
+        document.getElementById("login-button").addEventListener("click", async () => {
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+
+            try {
+                const response = await fetch("/token/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem("authToken", data.access_token);
+                    window.location.href = "/game"; // Переход на главную страницу игры
+                } else {
+                    document.getElementById("login-error").textContent =
+                        "Неверный логин или пароль.";
+                }
+            } catch (error) {
+                console.error("Ошибка при входе:", error);
+            }
+        });
+
+        // Обработка формы регистрации
+        document.getElementById("register-button").addEventListener("click", async () => {
+            const username = document.getElementById("register-username").value;
+            const password = document.getElementById("register-password").value;
+
+            try {
+                const response = await fetch("/register/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (response.ok) {
+                    alert("Регистрация прошла успешно!");
+                    document.getElementById("register-form").classList.remove("active");
+                    document.getElementById("login-form").classList.add("active");
+                } else {
+                    document.getElementById("register-error").textContent =
+                        "Ошибка при регистрации.";
+                }
+            } catch (error) {
+                console.error("Ошибка при регистрации:", error);
+            }
+        });
+    </script>
+</body>
+</html>

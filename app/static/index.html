@@ -1,0 +1,128 @@
+<!-- app/static/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Морской бой</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <h1>Морской бой</h1>
+        <!-- Панель выбора кораблей -->
+        <div id="ship-selection">
+            <h3>Выберите корабль:</h3>
+            <button id="select-ship-4" data-size="4">4-клеточный корабль</button>
+            <button id="select-ship-3" data-size="3">3-клеточный корабль</button>
+            <button id="select-ship-2" data-size="2">2-клеточный корабль</button>
+            <button id="select-ship-1" data-size="1">1-клеточный корабль</button>
+
+            <h3>Ориентация:</h3>
+            <label>
+                <input type="radio" name="orientation" value="horizontal" checked> Горизонтальная
+            </label>
+            <label>
+                <input type="radio" name="orientation" value="vertical"> Вертикальная
+            </label>
+        </div>
+
+        <!-- Игровые поля -->
+        <div id="boards">
+            <div class="board-container">
+                <h2>Ваше поле</h2>
+                <div id="player-board" class="board"></div>
+            </div>
+            <div class="board-container">
+                <h2>Поле противника</h2>
+                <div id="opponent-board" class="board"></div>
+            </div>
+        </div>
+
+        <!-- Панель управления -->
+        <div id="controls">
+            <button id="ready-button" disabled>Готов</button>
+            <div id="timer">Таймер: 00:30</div>
+        </div>
+    </div>
+
+    <script>
+        // Проверка токена
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+            alert("Вы не авторизованы. Пожалуйста, войдите в систему.");
+            window.location.href = "/auth";
+        }
+
+        // Инициализация игровых полей
+        function initBoards() {
+            const playerBoardElement = document.getElementById("player-board");
+            const opponentBoardElement = document.getElementById("opponent-board");
+
+            for (let i = 0; i < 100; i++) {
+                const playerCell = document.createElement("div");
+                playerCell.dataset.index = i;
+                playerCell.addEventListener("click", handlePlayerCellClick);
+                playerBoardElement.appendChild(playerCell);
+
+                const opponentCell = document.createElement("div");
+                opponentCell.dataset.index = i;
+                opponentCell.addEventListener("click", handleOpponentCellClick);
+                opponentBoardElement.appendChild(opponentCell);
+            }
+        }
+
+        // Обработка клика по ячейке поля игрока
+        function handlePlayerCellClick(event) {
+            const cell = event.target;
+            const index = cell.dataset.index;
+
+            console.log(`Размещение корабля на клетке ${index}`);
+            socket.send(JSON.stringify({ action: "place_ship", x: Math.floor(index / 10), y: index % 10, size: 3, orientation: "horizontal" }));
+        }
+
+        // Обработка клика по ячейке поля противника
+        function handleOpponentCellClick(event) {
+            const cell = event.target;
+            const index = cell.dataset.index;
+
+            console.log(`Совершён ход на клетку ${index}`);
+            socket.send(JSON.stringify({ action: "make_move", x: Math.floor(index / 10), y: index % 10 }));
+        }
+
+        // Подключение к WebSocket
+        const socket = new WebSocket(`ws://${window.location.host}/ws/1?token=${token}`);
+
+        socket.onopen = function () {
+            console.log("WebSocket connected");
+        };
+
+        socket.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            console.log("Server message:", data);
+
+            if (data.status === "success") {
+                alert(data.message);
+            }
+        };
+
+        socket.onerror = function (error) {
+            console.error("WebSocket error:", error);
+        };
+
+        socket.onclose = function (event) {
+            console.log("WebSocket connection closed:", event.reason);
+        };
+
+        // Инициализация при загрузке страницы
+        document.addEventListener("DOMContentLoaded", () => {
+            initBoards();
+        });
+    </script>
+</body>
+
+</html>
