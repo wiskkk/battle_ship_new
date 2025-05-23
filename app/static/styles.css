@@ -2,14 +2,9 @@
 
 /* Общие стили */
 body {
-    font-family: "Arial", sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
     margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
 }
 
 #game-container {
@@ -151,58 +146,95 @@ h1 {
 
 /* Стили для страницы авторизации */
 #auth-container {
-    width: 300px;
-    margin: 50px auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
     text-align: center;
+    padding: 20px;
 }
+
+#auth-container h1 {
+    font-size: 3rem;
+    color: #007bff;
+    margin-bottom: 30px;
+}
+
 
 .auth-form {
     display: none;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
 }
 
 .auth-form.active {
     display: flex;
 }
 
+.auth-form h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
 .auth-form input {
-    padding: 10px;
+    width: 100%;
+    padding: 12px;
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 5px;
+    transition: border-color 0.3s ease;
 }
 
-.auth-form button {
-    padding: 10px;
+.auth-form input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.auth-form .button {
+    width: 100%;
+    padding: 12px;
     font-size: 1rem;
-    background-color: #007bff;
     color: white;
+    background: linear-gradient(145deg, #007bff, #0056b3);
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.auth-form button:hover {
-    background-color: #0056b3;
+.auth-form .button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .error-message {
-    color: #dc3545;
+    color: red;
+    font-size: 0.9rem;
     margin-top: 10px;
 }
 
-#switch-form a {
+#switch-form,
+#switch-form-back {
+    margin-top: 20px;
+    font-size: 0.9rem;
     color: #007bff;
     text-decoration: none;
 }
 
-#switch-form a:hover {
+#switch-form a,
+#switch-form-back a {
+    color: #007bff;
     text-decoration: underline;
+    cursor: pointer;
+}
+
+#switch-form a:hover,
+#switch-form-back a:hover {
+    text-decoration: none;
 }
 
 #ship-selection {
@@ -228,3 +260,106 @@ h1 {
 #ship-selection label {
     margin-right: 10px;
 }
+
+#home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+.warning {
+    color: red;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+#auth-links a {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+#auth-links a:hover {
+    background-color: #0056b3;
+}
+
+#game-actions button {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#game-actions button:hover {
+    background-color: #218838;
+}
+
+
+#banner {
+    margin-bottom: 50px;
+}
+
+#banner h1 {
+    font-size: 3rem;
+    color: #007bff;
+    margin: 0;
+}
+
+#banner p {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin: 10px 0 0;
+}
+
+/* Кнопки */
+#game-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.button {
+    width: 300px; /* Фиксированная ширина */
+    padding: 15px 20px;
+    font-size: 1.2rem;
+    color: white;
+    background: linear-gradient(145deg, #007bff, #0056b3); /* Градиент */
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень */
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+/* Кнопка Login/Logout */
+#login-button-container,
+#logout-button-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+#logout-button {
+    background-color: #dc3545;
+}
+
+#logout-button:hover {
+    background-color: #bd2130;
+}
+

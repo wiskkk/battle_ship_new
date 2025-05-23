@@ -1,16 +1,25 @@
 # app/main.py
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    Request,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
+from app.db.session import SessionLocal, get_db
 from app.game_logic.game import get_game_status as get_game_status_logic
 from app.game_logic.game import join_game as join_game_logic
-from app.game_logic.game import start_game as start_game_logic
+from app.game_logic.game import start_game_logic
 from app.game_logic.utils import check_winner, make_move
 from app.models import Game as ModelGame
 from app.models import User as ModelUser
@@ -27,6 +36,7 @@ app = FastAPI()
 origins = [
     "http://localhost",
     "http://localhost:8000",  # Убедитесь, что это соответствует порту вашего клиента
+    "http://localhost:8001",
 ]
 
 app.add_middleware(
@@ -40,49 +50,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Подключение статических файлов
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-
-# === Группа: Статус приложения ===
-@app.get("/health")
-def health():
-    """Проверка работоспособности приложения."""
-    return {"status": "ok"}
-
-
-# === Группа: Пользователи ===
-@app.get("/users/", response_model=list[SchemaUser])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Получение списка пользователей."""
-    return get_users(db, skip=skip, limit=limit)
-
-
-@app.post("/register/", response_model=SchemaUser)
-def register(user: UserCreate, db: Session = Depends(get_db)):
-    """Регистрация нового пользователя."""
-    hashed_password = hash_password(user.password)
-    new_user = ModelUser(username=user.username, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-
-@app.post("/token/", response_model=Token)
-def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
-    """Аутентификация пользователя и выдача JWT."""
-    user = (
-        db.query(ModelUser)
-        .filter(ModelUser.username == user_credentials.username)
-        .first()
-    )
-    if not user or not verify_password(user_credentials.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
 
 
 async def get_current_user(
@@ -107,23 +74,126 @@ async def get_current_user(
     return user
 
 
+@app.get("/health")
+def health():
+    """Проверка работоспособности приложения."""
+    return {"status": "ok"}
+
+
+@app.get("/", response_class=HTMLResponse)
+async def home_page(request: Request):
+    """Главная страница."""
+    # Проверяем, есть ли токен в cookies или заголовках
+    token = None
+    try:
+        # Получаем токен из cookies
+        token = request.cookies.get("authToken")
+        if not token:
+            # Если токена нет в cookies, пробуем получить его из заголовков
+            authorization_header = request.headers.get("Authorization")
+            if authorization_header and authorization_header.startswith("Bearer "):
+                token = authorization_header.split(" ")[1]
+    except Exception as e:
+        print(f"Error - {e}")
+
+    if not token:
+        # Если токен отсутствует, показываем страницу для неавторизованных пользователей
+        with open("app/static/home.html", "r", encoding="utf-8") as file:
+            return HTMLResponse(content=file.read())
+
+    # Если токен есть, проверяем его валидность
+    payload = decode_token(token)
+    if payload is None:
+        # Если токен недействителен, также показываем страницу для неавторизованных пользователей
+        with open("app/static/home.html", "r", encoding="utf-8") as file:
+            return HTMLResponse(content=file.read())
+
+    # Если токен действителен, показываем страницу для авторизованных пользователей
+    username = payload.get("sub")
+    with open("app/static/authenticated_home.html", "r", encoding="utf-8") as file:
+        content = file.read().replace("{{ username }}", username)
+        return HTMLResponse(content=content)
+
+
+@app.post("/games/start/")
+def start_game(
+    current_user: ModelUser = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    """Создание новой игры."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    game = start_game_logic(current_user.id, db)
+    return {"game_id": game.id}
+
+
+@app.post("/games/join/")
+def join_game(
+    game_id: int,
+    current_user: ModelUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Присоединение второго игрока к игре."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    game = join_game_logic(game_id, current_user.id, db)
+    return {"game_id": game.id}
+
+
+@app.get("/users/", response_model=list[SchemaUser])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """Получение списка пользователей."""
+    return get_users(db, skip=skip, limit=limit)
+
+
+@app.post("/register/", response_model=SchemaUser)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    """Регистрация нового пользователя."""
+    hashed_password = hash_password(user.password)
+    new_user = ModelUser(username=user.username, hashed_password=hashed_password)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+@app.post("/token/", response_model=Token)
+def login(
+    response: Response, user_credentials: UserLogin, db: Session = Depends(get_db)
+):
+    """Аутентификация пользователя и выдача JWT."""
+    user = (
+        db.query(ModelUser)
+        .filter(ModelUser.username == user_credentials.username)
+        .first()
+    )
+    if not user or not verify_password(user_credentials.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = create_access_token(data={"sub": user.username})
+
+    # Сохраняем токен в cookies
+    response.set_cookie(key="authToken", value=access_token, httponly=True)
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/auth/logout")
+def logout(response: Response):
+    """Выход из системы."""
+    response.delete_cookie(key="authToken")
+    return {"message": "Logged out successfully"}
+
+
 @app.get("/users/me/", response_model=SchemaUser)
 def read_users_me(current_user: ModelUser = Depends(get_current_user)):
     """Получение информации о текущем пользователе."""
     return current_user
-
-
-# === Группа: Игры ===
-@app.post("/games/start/")
-def start_game(player1_id: int, db: Session = Depends(get_db)):
-    """Создание новой игры."""
-    return start_game_logic(player1_id, db)
-
-
-@app.post("/games/join/")
-def join_game(game_id: int, player2_id: int, db: Session = Depends(get_db)):
-    """Присоединение второго игрока к игре."""
-    return join_game_logic(game_id, player2_id, db)
 
 
 @app.get("/games/{game_id}/status/")
@@ -137,6 +207,7 @@ def make_move_endpoint(game_id: int, move_data: dict, db: Session = Depends(get_
     """Обработка хода игрока."""
     game = db.query(ModelGame).filter(ModelGame.id == game_id).first()
     if not game:
+        print("Game not found def make_move_point")
         raise HTTPException(status_code=404, detail="Game not found")
 
     player_id = move_data.get("player_id")
@@ -169,19 +240,49 @@ def make_move_endpoint(game_id: int, move_data: dict, db: Session = Depends(get_
     return {"result": result, "status": game.status}
 
 
-# === Группа: WebSocket ===
 @app.websocket("/ws/{game_id}")
 async def websocket_handler(websocket: WebSocket, game_id: int):
-    """Обработка WebSocket-соединений."""
-    token = websocket.query_params.get("token")
-    if not token:
-        await websocket.close(reason="Token is required")
-        return
+    try:
+        # Получаем токен
+        token = websocket.query_params.get("token")
+        if not token:
+            await websocket.close(code=1008, reason="Token is required")
+            return
 
-    await websocket_endpoint(websocket, game_id, token)
+        # Проверяем токен
+        payload = decode_token(token)
+        if payload is None:
+            print(f"Invalid token: {token}")
+            await websocket.close(code=1008, reason="Invalid token")
+            return
+
+        # Получаем пользователя
+        username = payload.get("sub")
+
+        # Подключаемся к базе данных
+        db: Session = SessionLocal()
+
+        # Получаем игру
+        game = db.query(ModelGame).filter(ModelGame.id == game_id).first()
+        if not game:
+            print(f"Game not found for ID: {game_id}")
+            await websocket.close(code=1008, reason="Game not found")
+            return
+
+        # Если игра найдена, принимаем соединение
+        await websocket.accept()
+        try:
+            while True:
+                data = await websocket.receive_text()
+                await websocket.send_text(f"Message text was: {data}, from client")
+        except WebSocketDisconnect:
+            pass
+
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        await websocket.close(code=1011, reason=str(e))
 
 
-# === Группа: Страницы ===
 @app.get("/auth", response_class=HTMLResponse)
 async def auth_page():
     """Страница авторизации."""

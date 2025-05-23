@@ -49,7 +49,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: int, token: str):
     # Получаем игру из базы данных
     game = db.query(ModelGame).filter(ModelGame.id == game_id).first()
     if not game:
-        await websocket.close(reason="Game not found")
+        print(f"Game not found: {game_id}")
+        await websocket.close(code=1008, reason="Game not found")
         return
 
     # Проверяем, является ли пользователь участником игры

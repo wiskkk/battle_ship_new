@@ -1,0 +1,58 @@
+<!-- app/static/home.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Морской бой</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+
+    <body>
+        <div id="home-container">
+            <!-- Баннер -->
+            <div id="banner">
+                <h1>Морской бой</h1>
+                <p>Играйте в классическую игру онлайн!</p>
+            </div>
+
+            <!-- Кнопки -->
+            <div id="game-actions">
+                <button id="create-game-button" class="button">Создать игру</button>
+                <button id="join-game-button" class="button">Присоединиться к игре</button>
+            </div>
+
+            <!-- Кнопка Login -->
+            <div id="login-button-container">
+                <!-- <a href="/auth" id="login-button" class="button">Login</a> -->
+                <button id="login-button" class="button" style="width: auto;" onclick="window.location.href='/auth'">Login</button>
+            </div>
+        </div>
+
+        <script>
+            // Получаем токен из localStorage
+            const token = localStorage.getItem("authToken");
+
+            // Создание игры
+            document.getElementById("create-game-button")?.addEventListener("click", () => {
+                alert("Вы не авторизованы. Пожалуйста, войдите в систему.");
+            });
+
+            // Присоединение к игре
+            document.getElementById("join-game-button")?.addEventListener("click", () => {
+                alert("Вы не авторизованы. Пожалуйста, войдите в систему.");
+            });
+
+            document.getElementById("login-button").addEventListener("click", async () => {
+                try {
+                    const response = await fetch("/auth");
+                } catch (error) {
+                    console.error("Ошибка:", error);
+                }
+            });
+        </script>
+    </body>
+
+</html>

@@ -2,17 +2,15 @@
 
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.models import Game, User
+from app.models import Game
 
 
-def start_game(player1_id: int, db: Session):
-    """Создание новой игры."""
+def start_game_logic(player1_id: int, db: Session):
     new_game = Game(player1_id=player1_id, status="waiting")
     db.add(new_game)
     db.commit()
     db.refresh(new_game)
-    return {"game_id": new_game.id, "status": "waiting"}
+    return new_game
 
 
 def join_game(game_id: int, player2_id: int, db: Session):
